@@ -12,20 +12,20 @@ int main()
 	// First pipe to send input string from parent
 	// Second pipe to send concatenated string from child
  
-	int fd1[2];  // Used to store two ends of first pipe
-	int fd2[2];  // Used to store two ends of second pipe
+	int P1[2];  // Used to store two ends of first pipe
+	int P2[2];  // Used to store two ends of second pipe
  
-	char fixed_str1[] = "howard.edu";
-	char fixed_str2[] = "gobison.org";
+	char firstStr_fixed[] = "howard.edu";
+	char secondStr_fixed[] = "gobison.org";
 	char input_str[100];
-	pid_t p;
+	pid_t pid;
  
-	if (pipe(fd1)==-1)
+	if (pipe(P1)==-1)
 	{
     	fprintf(stderr, "Pipe Failed" );
     	return 1;
 	}
-	if (pipe(fd2)==-1)
+	if (pipe(P2)==-1)
 	{
     	fprintf(stderr, "Pipe Failed" );
     	return 1;
@@ -33,65 +33,63 @@ int main()
  
 	printf("Enter a string to concatenate:");
 	scanf("%s", input_str);
-	p = fork();
+	pid = fork();
  
-	if (p < 0)
+	if (pid < 0)
 	{
     	fprintf(stderr, "fork Failed" );
     	return 1;
 	}
  
 	// Parent process
-	else if (p > 0)
+	else if (pid > 0)
 	{
  
-    	close(fd1[0]);  // Close reading end of pipes
-    	close(fd2[1]);
+    	close(P1[0]);  // Close reading end of pipes
+    	close(P2[1]);
  
-    	// Write input string and close writing end of first
+    	// Write input and close writing end of first
     	// pipe.
-    	write(fd1[1], input_str, strlen(input_str)+1);
+    	write(P1[1], input_str, strlen(input_str)+1);
    	 
  
     	// Wait for child to send a string
     	wait(NULL);
  	 
-   	 
-    	//printf("test \n");
  	 
     	char concat_str2[100];
-    	read(fd2[0], concat_str2, 100);
+    	read(P2[0], concat_str2, 100);
  	 
     	int k = strlen(concat_str2);
     	int i;
-    	for (i=0; i<strlen(fixed_str2); i++)
-        	concat_str2[k++] = fixed_str2[i];
+    	for (i=0; i<strlen(secondStr_fixed); i++)
+        	concat_str2[k++] = secondStr_fixed[i];
     	concat_str2[k] = '\0';
    	 
  
     	printf("Concatenated string: %s\n", concat_str2);
     
 	 
-    	close(fd1[1]);
-    	close(fd2[0]);
+    	close(P1[1]);
+    	close(P2[0]);
  	 
 	}
  
 	// child process
 	else
 	{
-    	close(fd1[1]);  // Close writing end of first pipes
-    	close(fd2[0]);
+    	close(P1[1]);  // Close writing end of first pipes
+    	close(P2[0]);
  	 
     	// Read a string using first pipe
     	char concat_str1[100];
-    	read(fd1[0], concat_str1, 100);
+    	read(P1[0], concat_str1, 100);
  
     	// Concatenate a fixed string with it
     	int k = strlen(concat_str1);
     	int i;
-    	for (i=0; i<strlen(fixed_str1); i++)
-        	concat_str1[k++] = fixed_str1[i];
+    	for (i=0; i<strlen(firstStr_fixed); i++)
+        	concat_str1[k++] = firstStr_fixed[i];
  
     	concat_str1[k] = '\0';   // string ends with '\0'
  
@@ -99,10 +97,10 @@ int main()
  	 
     	printf("Enter a string to concatenate:");
     	scanf("%s", input_str);
-    	write(fd2[1], input_str, strlen(input_str)+1);
+    	write(P2[1], input_str, strlen(input_str)+1);
 	 
-    	close(fd1[0]);
-    	close(fd2[1]);
+    	close(P1[0]);
+    	close(P2[1]);
  
     	exit(0);
 	}
